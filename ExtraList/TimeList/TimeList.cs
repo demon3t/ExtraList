@@ -196,6 +196,11 @@ namespace ExtraList.TimeList
         #endregion
 
         #region Use
+        /// <summary>
+        /// Помечает предмет только что использованным.
+        /// </summary>
+        /// <param name="index"> Индекс используемого обьекта. </param>
+        /// <returns> Возврат используемого обекта. </returns>
         public T Use(int index)
         {
             T temp = Values[index];
@@ -252,6 +257,9 @@ namespace ExtraList.TimeList
         #endregion
 
         #region Clear
+        /// <summary>
+        /// Очистка коллекции.
+        /// </summary>
         public void Clear()
         {
             Values = new T[Size];
@@ -294,10 +302,12 @@ namespace ExtraList.TimeList
 
                 if (index == -1) return;
 
-                for (var i = index; i < _count - 1; i = i == _count - 1 ? 0 : i++)
+                int _end = Old + 1 == Size ? 0 : Old + 1;
+                for (var i = index; i < _end; i = i - 1 == -1 ? Size - 1 : i--)
                 {
-                    Values[i] = Values[N(i)];
-                    Times[i] = Times[N(i)];
+                    int prew = i - 1 == -1 ? Size - 1 : i - 1;
+                    Values[i] = Values[prew];
+                    Times[i] = Times[prew];
                 }
                 _count--;
             }
@@ -305,10 +315,12 @@ namespace ExtraList.TimeList
         }
         public void RemoveAt(int index)
         {
-            for (var i = index; i < _count - 1; i = i == _count - 1 ? 0 : i++)
+            int _end = Old + 1 == Size ? 0 : Old + 1;
+            for (var i = index; i < _end; i = i - 1 == -1 ? Size - 1 : i--)
             {
-                Values[i] = Values[N(i)];
-                Times[i] = Times[N(i)];
+                int prew = i - 1 == -1 ? Size - 1 : i - 1;
+                Values[i] = Values[prew];
+                Times[i] = Times[prew];
             }
             _count--;
         }
@@ -319,6 +331,7 @@ namespace ExtraList.TimeList
         #endregion
 
         #region Insert
+
         [Obsolete("Работает как метод Add()")]
         public void Insert(int index, T item) => Add(item);
 
@@ -328,14 +341,16 @@ namespace ExtraList.TimeList
         [Obsolete("Является не безопасным по отшению порядка данных в массиве")]
         public void Insert(int index, T value, DateTime time)
         {
-            for (int i = Prew; i < index; i = i == 0 ? _count : i--)
+            for (int i = Old; i < index; i = i - 1 == -1 ? Size - 1 : i--)
             {
-                Values[i] = Values[P(i)];
-                Times[i] = Times[P(i)];
+                int prew = i - 1 == -1 ? Size - 1 : i - 1;
+                Values[prew] = Values[i];
+                Times[prew] = Times[i];
             }
             Values[index] = value;
             Times[index] = time;
         }
+
         #endregion
 
         #region Implicit operator
@@ -343,28 +358,38 @@ namespace ExtraList.TimeList
         public static implicit operator List<DateTime>(TimeList<T> values) { return values.GetTimeList(); }
         public static implicit operator T[](TimeList<T> values) { return values.GetValuesArray(); }
         public static implicit operator List<T>(TimeList<T> values) { return values.GetValuesList(); }
-        public DateTime[] GetTimeArray()
-        {
-            return Times;
-        }
-        public List<DateTime> GetTimeList()
-        {
-            return new List<DateTime>(Times);
-        }
-        public T[] GetValuesArray()
-        {
-            return Values;
-        }
-        public List<T> GetValuesList()
-        {
-            return new List<T>(Values);
-        }
+
+        /// <summary>
+        /// Возврат массива времении обращения к обьектам.
+        /// </summary>
+        /// <returns> Массива времении обращения. </returns>
+        public DateTime[] GetTimeArray() => Times;
+        /// <summary>
+        /// Возврат коллекции времении обращения к обьектам.
+        /// </summary>
+        /// <returns> Коллекция времении обращения. </returns>
+        public List<DateTime> GetTimeList() => new List<DateTime>(Times);
+        /// <summary>
+        /// Возврат массива обектов содержащихся в коллекции.
+        /// </summary>
+        /// <returns> Массив обьектов. </returns>
+        public T[] GetValuesArray() => Values;
+        /// <summary>
+        /// Возврат коллекции обектов содержащихся в коллекции.
+        /// </summary>
+        /// <returns> Коллекрия обьектов. </returns>
+        public List<T> GetValuesList() => new List<T>(Values);
         #endregion
 
         #region Override
         public override string ToString()
         {
-            return Values.ToString();
+            StringBuilder @string = new StringBuilder();
+            for (int i = Now; i < Old + 1; i = i + 1 == Size ? 0 : i++)
+            {
+                @string.AppendLine($"{Times[i]} - {Values[i]}");
+            }
+            return @string.ToString();
         }
         public override int GetHashCode()
         {
@@ -383,46 +408,29 @@ namespace ExtraList.TimeList
         #endregion
 
         #region private
+
+        /// <summary>
+        /// Определяет место для вставки объекта.
+        /// </summary>
+        /// <param name="time"> Временной критерий вставки. </param>
+        /// <param name="place"> Индекс вставки, -1 при неудаче. </param>
+        /// <returns> true - индекс вставки найден, false -индекс не найден. </returns>
         private bool FindPlace(DateTime time, out int place)
         {
-            place = Indexer;
-            if (_count < Size)
-            {
-                for (int i = Indexer; i < (Indexer + 1 == Size? 0 : Indexer + 1); i = i + 1 == Size? 0 : i++)
-                {
-                    if (Times[P(i)] <= time && time <= Times[N(i)])
-                    {
-                        place = i;
-                        return true;
-                    }
-                }
-                return true;
-            }
-            if (time < Times[Prew])
-            {
                 place = -1;
+            if (time < Times[Old])
                 return false;
-            }
-            for (int i = Next; i < Indexer; i++)
+            else
+                for (int i = Old; i < Now; i = i + 1 == Size ? 0 : i++)
             {
-                if (Times[P(i)] <= time && time <= Times[N(i)])
+                    if (time < Times[i])
                 {
                     place = i;
                     return true;
                 }
             }
-            return true;
+            return false;
         }
-
-        /// <summary>
-        /// Возврашает более старый индекс
-        /// </summary>
-        private int N(int index) => (index + 1) % _count;
-
-        /// <summary>
-        /// Возврашает более новый индекс
-        /// </summary>
-        private int P(int index) => index - 1 == -1 ? _count - 1 : index - 1;
 
         #endregion
 
