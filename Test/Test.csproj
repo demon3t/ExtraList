@@ -5,8 +5,8 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\ExtraList\ExtraList.csproj" />
-  </ItemGroup>
+	<ImportGroup>
+		<Complite Visible="false"/>
+	</ImportGroup>
 
 </Project>
