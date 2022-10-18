@@ -283,7 +283,7 @@ namespace ExtraList.TimeList
         {
             for (int i = 0; i < _count; i++)
             {
-                if (Values[i].Equals(item));
+                if (Values[i].Equals(item))
                     return true;
             }
             return false;
