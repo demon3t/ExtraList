@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 
 namespace test
 {
@@ -6,7 +7,13 @@ namespace test
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+
+            Console.WriteLine(DateTime.Now < DateTime.Now.AddDays(1));
+
+            int i = 10;
+            int f = i-- == 9 ? 1 : 0;
+            Console.WriteLine(f);
+            Console.WriteLine(i);
         }
     }
 }
